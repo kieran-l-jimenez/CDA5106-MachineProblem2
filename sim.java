@@ -166,13 +166,17 @@ class bimodalPredictor {
         return GP.call(PC);
     }
 
+    public void updateBP(boolean actualResult) {
+        GP.updateBP(actualResult);
+    }
+
     public String print() {
         return GP.print();
     }
 }
 
 class gsharePredictor {
-    basicPredictor[] BPArray;
+    basicPredictor[] predictionTable;
     int index, mMask, nBits, GBHR;
 
     public gsharePredictor(int m, int n, String tracefileString) {
@@ -181,9 +185,9 @@ class gsharePredictor {
         mMask = m - 1;
         nBits = n;
         GBHR = 0;
-        BPArray = new basicPredictor[m];
+        predictionTable = new basicPredictor[m];
         //TODO parallelize this loop if takes more than 2 minutes
-        for (basicPredictor BPi : BPArray) {
+        for (basicPredictor BPi : predictionTable) {
             BPi = new basicPredictor();
         }
     }
@@ -192,14 +196,14 @@ class gsharePredictor {
         //1. PC >> 2    : discard 2 bottom bits of PC
         //2. & mMask    : get m low-order bits (aka, bits m+1 through 2)
         //3. ^ GBHR     : XOR with global branch history; in bimodal there will be no change (XOR 0 does nothing)
-        index = ((PC >> 2) & mMask) ^ GBHR;
-        return BPArray[index].predict();
+        index = ((PC >>> 2) & mMask) ^ GBHR;
+        return predictionTable[index].predict();
     }
 
     public void updateBP(boolean actualResult) {
         // !!! ASSUMES compiler doesn't switch operating order, uses index calculated by prior call()
         // IF there are errors, have call() pass back the index calculated along with the prediction and pass index into here
-        BPArray[index].update(actualResult);
+        predictionTable[index].update(actualResult);
     }
 
     public void updateGBHR(boolean actualResult) {
@@ -221,9 +225,10 @@ class gsharePredictor {
     public String print() {
         //TODO convert to use StringBuffer if takes more than 2 minutes
         String retString = new String();
+        
         //TODO parallelize this loop if takes more than 2 minutes
-        for (int i = 0; i < BPArray.length; i++) {
-            retString = retString.concat("\n" + i + "\t" + BPArray[i].current);
+        for (int i = 0; i < predictionTable.length; i++) {
+            retString = retString.concat("\n" + i + "\t" + predictionTable[i].current);
         }
         return retString;
     }
@@ -236,34 +241,59 @@ class hybridPredictor {
     int kMask;
 
     public hybridPredictor() {
-        //bmPredictor = new bimodalPredictor()
-        //gsPredictor = new gsharePredictor()
-        //kMask = 2^k - 1
-            //TODO we don't need Math.pow(), we can use left shift operations since we want powers of 2
-        //BPArray = new basicPredictor[2^k]
-            //parallelized loop to init each? basicPredictor(2)
+        // k = 1 << kBits = 2^kBits
+        gsPredictor = new gsharePredictor(m1, n, tracefileString);
+        bmPredictor = new bimodalPredictor(m2, tracefileString);
+        kMask = k - 1;
+        chooser = new basicPredictor[k];
+        int chooserBits = 1 << 2;
+        //TODO parallelize this loop if takes more than 2 minutes
+        for (basicPredictor BPi : chooser) {
+            BPi = new basicPredictor(chooserBits);
+        }
     }
 
-    public boolean predict() {
-        //chooseIndex = (pc >> 2) & kMask
-        //retG = gsPredictor.call()
-        //retB = bmPredictor.call()
-        //if (chooser[chooseIndex].call())
-            //ret = retG
-            //gsPredictor.updateBP()
-        //else
-            //ret = retB
-            //bmPredictor.updateBP()
-        //gsPredictor.updateGBHR()
-        //if retB == retG {break;}
-        //else if retG == actualResult {chooser[chooseIndex].update(t)}
-        //else {chooser[chooseIndex].update(n)}
-        //return ret
+    public boolean predict(int PC, boolean actualResult) {
+        int chooserIndex = (PC >>> 2) & kMask;
+        boolean retG = gsPredictor.call(PC);
+        boolean retB = bmPredictor.call(PC);
+        boolean ret;
+
+        if (chooser[chooserIndex].call()) {
+            ret = retG;
+            gsPredictor.updateBP(actualResult);
+        } else {
+            ret = retB;
+            bmPredictor.updateBP(actualResult);
+        }
+
+        gsPredictor.updateGBHR(actualResult);
+
+        if (retB == retG) {
+            break;
+        } else if (retG == actualResult) {
+            chooser[chooserIndex].update(true);
+        } else {
+            chooser[chooserIndex].update(false);
+        }
+
+        return ret;
     }
 
     public String print() {
-        //retString
-        //for (chooser.length)
-            //retString = "\n" + i + "\t" + chooser[i].current
+        //TODO convert to use StringBuffer if takes more than 2 minutes
+        String retString = new String();
+
+        //TODO parallelize this loop if takes more than 2 minutes
+        for (int i = 0; i < chooser.length; i++) {
+            retString = retString.concat("\n" + i + "\t" + chooser[i].current);
+        }
+
+        retString = retString.concat("FINAL GSHARE CONTENTS");
+        retString = retString.concat(gsPredictor.print());
+        retString = retString.concat("FINAL BIMODAL CONTENTS");
+        retString = retString.concat(bmPredictor.print());
+
+        return retString;
     }
 }
