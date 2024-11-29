@@ -1,0 +1,215 @@
+class sim {
+    public static void main(String[] args) {
+        switch (args[0]) {
+            case "smith":
+                // initialize values
+                int B = args[1];
+                String tracefileString = args[2];
+                // validate inputs
+                // open file
+                // initialize accesses and mispredictions
+
+                // iterate through trace
+                    // split line
+                    // get result from predictor
+                    // accessess++
+                    // if (result != actualResult) mispredictions++;
+                // print results
+                    // bufferedprint(this.print())
+                    // bufferedprint(predictor.print())
+                break;
+
+            case "bimodal":
+                // initialize values
+                // initialize accesses and mispredictions
+                // iterate through trace
+                    // split line
+                    // get result from predictor
+                    // accessess++
+                    // if (result != actualResult) mispredictions++;
+                // print results
+                    // bufferedprint(this.print())
+                    // bufferedprint(predictor.print())
+                break;
+
+            case "gshare":
+                // initialize values
+                // initialize accesses and mispredictions
+                // iterate through trace
+                    // split line
+                    // get result from predictor
+                    // accessess++
+                    // if (result != actualResult) mispredictions++;
+                // print results
+                    // bufferedprint(this.print())
+                    // bufferedprint(predictor.print())
+                break;
+
+            case "hybrid":
+                // initialize values
+                // initialize accesses and mispredictions
+                // iterate through trace
+                    // split line
+                    // get result from predictor
+                    // accessess++
+                    // if (result != actualResult) mispredictions++;
+                // print results
+                    // bufferedprint(this.print())
+                    // bufferedprint(predictor.print())
+                break;
+        }
+    }
+
+    public String print() {
+        // COMMAND
+        // "./sim " + args
+        // OUTPUT
+        // "number of predictions:\t" + accessess
+        // "number of mispredictions:\t" + mispredictions
+        // "misprediction rate:\t" + .2f(mispredictions/accessess) + "%\n"
+        // Maybe return a buffered string thing?
+    }
+}
+
+class basicPredictor {
+    public int max, min, current, flip;
+
+    public basicPredictor() {
+        //basicPredictor(x=3)
+    }
+
+    public basicPredictor() {
+        //TODO consider having the input be the precalculated 2^x
+            //so that we don't recalculate the exponent a billion times
+            //for bimodal/gshare/hybrid
+        //flip = 2^x
+        //max = flip - 1
+        //min = 0
+        //flip = flip / 2
+        //current = flip
+    }
+
+    public boolean predict() {
+        // return current >= flip;
+    }
+
+    public void update() {
+        //if actualResult == 't'
+            //if current == max {break;}
+            //current++;
+        //else
+            //if current == min {break;}
+            //current--;
+    }
+}
+
+class smithPredictor {
+    basicPredictor BP;
+
+    public smithPredictor() {
+        //BP = new basicPredictor(x)
+    }
+
+    public boolean call() {
+        //boolean ret = BP.predict();
+        //BP.update()
+        //return ret;
+    }
+
+    public String print() {
+        //return BP.current (String)
+    }
+}
+
+class bimodalPredictor {
+    gsharePredictor GP;
+
+    public bimodalPredictor() {
+        //GP = new gsharePredictor(m, 0, tracefile);
+    }
+
+    public boolean call() {
+        //return GP.call();
+    }
+
+    public String print() {
+        //return GP.print();
+    }
+}
+
+class gsharePredictor {
+    basicPredictor[] BPArray;
+    int mMask, GBHR, nMask, index;
+
+    public gsharePredictor() {
+        //index = 0
+        //mMask = 2^m - 1
+        //nBits = n // TODO Double Check
+        //GBHR = 0
+        //BPArray = new basicPredictor[2^m]
+            //parallelized loop to init each?
+    }
+
+    public boolean call() {
+        //index = ((PC>>2) & mMask) ^ GBHR
+        //return BPArray[index].predict();
+    }
+
+    public void updateBP() {
+        //!ASSUMES compiler doesn't switch operating order, uses index calculated by prior call()
+        //BPArray[index].update(actualResult);
+    }
+
+    public void updateGBHR() {
+        //if nBits == 0 return
+        //GBHR = GBHR >> 1
+        //if (actualResult)
+            //GBHR = (1 << n) | GBHR
+    }
+
+    public String print() {
+        //retString
+        //for (BPArray.length)
+            //retString = "\n" + i + "\t" + BPArray[i].current
+        //return retString
+    }
+}
+
+class hybridPredictor {
+    basicPredictor[] chooser;
+    bimodalPredictor bmPredictor;
+    gsharePredictor gsPredictor;
+    int kMask;
+
+    public hybridPredictor() {
+        //bmPredictor = new bimodalPredictor()
+        //gsPredictor = new gsharePredictor()
+        //kMask = 2^k - 1
+            //TODO we don't need Math.pow(), we can use left shift operations since we want powers of 2
+        //BPArray = new basicPredictor[2^k]
+            //parallelized loop to init each? basicPredictor(2)
+    }
+
+    public boolean predict() {
+        //chooseIndex = (pc >> 2) & kMask
+        //retG = gsPredictor.call()
+        //retB = bmPredictor.call()
+        //if (chooser[chooseIndex].call())
+            //ret = retG
+            //gsPredictor.updateBP()
+        //else
+            //ret = retB
+            //bmPredictor.updateBP()
+        //gsPredictor.updateGBHR()
+        //if retB == retG {break;}
+        //else if retG == actualResult {chooser[chooseIndex].update(t)}
+        //else {chooser[chooseIndex].update(n)}
+        //return ret
+    }
+
+    public String print() {
+        //retString
+        //for (chooser.length)
+            //retString = "\n" + i + "\t" + chooser[i].current
+    }
+}
