@@ -47,7 +47,7 @@ class sim {
                 myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) mispredictions / accesses) + "%\n");
                 myWriter.write("FINAL COUNTER CONTENT:\t");
                 myWriter.write(SP.print());
-                
+
                 break;
 
             case "bimodal":
@@ -106,49 +106,51 @@ class basicPredictor {
     public int max, min, current, flip;
 
     public basicPredictor() {
-        //basicPredictor(x=3)
+        basicPredictor((1 << 3));
     }
 
-    public basicPredictor() {
-        //TODO consider having the input be the precalculated 2^x
-            //so that we don't recalculate the exponent a billion times
-            //for bimodal/gshare/hybrid
-        //flip = 2^x
-        //max = flip - 1
-        //min = 0
-        //flip = flip / 2
-        //current = flip
+    public basicPredictor(int x) {
+        //x = 1 << Bits = 2^Bits
+        max = x - 1;
+        min = 0;
+        flip = x / 2;
+        current = flip;
     }
 
     public boolean predict() {
-        // return current >= flip;
+        return current >= flip;
     }
 
-    public void update() {
-        //if actualResult == 't'
-            //if current == max {break;}
-            //current++;
-        //else
-            //if current == min {break;}
-            //current--;
+    public void update(boolean actualResult) {
+        if (actualResult) {
+            if (current < max) {
+                current++;
+            }
+        } else {
+            if (current > min) {
+                current--;
+            }
+        }
     }
 }
 
 class smithPredictor {
     basicPredictor BP;
 
-    public smithPredictor() {
-        //BP = new basicPredictor(x)
+    public smithPredictor(int x) {
+        BP = new basicPredictor(x);
     }
 
     public boolean call() {
-        //boolean ret = BP.predict();
-        //BP.update()
-        //return ret;
+        return BP.predict();
+    }
+
+    public void update(boolean actualResult) {
+        BP.update(actualResult);
     }
 
     public String print() {
-        //return BP.current (String)
+        return Integer.toString(BP.current);
     }
 }
 
