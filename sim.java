@@ -55,6 +55,7 @@ class sim {
                 // initialize accesses and mispredictions
                 // iterate through trace
                     // split line
+                    // pass components[0] after converting from hex
                     // get result from predictor
                     // accessess++
                     // if (result != actualResult) mispredictions++;
@@ -157,54 +158,74 @@ class smithPredictor {
 class bimodalPredictor {
     gsharePredictor GP;
 
-    public bimodalPredictor() {
-        //GP = new gsharePredictor(m, 0, tracefile);
+    public bimodalPredictor(int m, String tracefileString) {
+        GP = new gsharePredictor(m, 0, tracefileString);
     }
 
-    public boolean call() {
-        //return GP.call();
+    public boolean call(int PC) {
+        return GP.call(PC);
     }
 
     public String print() {
-        //return GP.print();
+        return GP.print();
     }
 }
 
 class gsharePredictor {
     basicPredictor[] BPArray;
-    int mMask, GBHR, nMask, index;
+    int index, mMask, nBits, GBHR;
 
-    public gsharePredictor() {
-        //index = 0
-        //mMask = 2^m - 1
-        //nBits = n // TODO Double Check
-        //GBHR = 0
-        //BPArray = new basicPredictor[2^m]
-            //parallelized loop to init each?
+    public gsharePredictor(int m, int n, String tracefileString) {
+        //m = 1 << mBits = 2^mBits
+        index = 0;
+        mMask = m - 1;
+        nBits = n;
+        GBHR = 0;
+        BPArray = new basicPredictor[m];
+        //TODO parallelize this loop if takes more than 2 minutes
+        for (basicPredictor BPi : BPArray) {
+            BPi = new basicPredictor();
+        }
     }
 
-    public boolean call() {
-        //index = ((PC>>2) & mMask) ^ GBHR
-        //return BPArray[index].predict();
+    public boolean call(int PC) {
+        //1. PC >> 2    : discard 2 bottom bits of PC
+        //2. & mMask    : get m low-order bits (aka, bits m+1 through 2)
+        //3. ^ GBHR     : XOR with global branch history; in bimodal there will be no change (XOR 0 does nothing)
+        index = ((PC >> 2) & mMask) ^ GBHR;
+        return BPArray[index].predict();
     }
 
-    public void updateBP() {
-        //!ASSUMES compiler doesn't switch operating order, uses index calculated by prior call()
-        //BPArray[index].update(actualResult);
+    public void updateBP(boolean actualResult) {
+        // !!! ASSUMES compiler doesn't switch operating order, uses index calculated by prior call()
+        // IF there are errors, have call() pass back the index calculated along with the prediction and pass index into here
+        BPArray[index].update(actualResult);
     }
 
-    public void updateGBHR() {
-        //if nBits == 0 return
-        //GBHR = GBHR >> 1
-        //if (actualResult)
-            //GBHR = (1 << n) | GBHR
+    public void updateGBHR(boolean actualResult) {
+        // if there is no global history register, return
+        if (nBits == 0) {
+            return;
+        }
+
+        // shift GBHR bits to the right by one, fill with 0
+        // (aka: default to assume branch actually not taken)
+        GBHR = GBHR >>> 1;
+
+        // if the branch was taken, place 1 in most significant bit
+        if (actualResult) {
+            GBHR = (1 << nBits) | GBHR;
+        }
     }
 
     public String print() {
-        //retString
-        //for (BPArray.length)
-            //retString = "\n" + i + "\t" + BPArray[i].current
-        //return retString
+        //TODO convert to use StringBuffer if takes more than 2 minutes
+        String retString = new String();
+        //TODO parallelize this loop if takes more than 2 minutes
+        for (int i = 0; i < BPArray.length; i++) {
+            retString = retString.concat("\n" + i + "\t" + BPArray[i].current);
+        }
+        return retString;
     }
 }
 
