@@ -1,3 +1,8 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.OutputStreamWriter;
+
 class sim {
     public static void main(String[] args) {
         switch (args[0]) {
@@ -5,18 +10,44 @@ class sim {
                 // initialize values
                 int B = args[1];
                 String tracefileString = args[2];
+
                 // validate inputs
+                //if (B <= 0 || tracefileString == null);
+
                 // open file
+                BufferedReader fileReader = new BufferedReader(new FileReader(tracefileString));
+
                 // initialize accesses and mispredictions
+                int accesses = 0;
+                int mispredictions = 0;
+                String lineString;
+                smithPredictor SP = new smithPredictor(1 << B);
 
                 // iterate through trace
+                while ((lineString = fileReader.readLine()) != null) {
                     // split line
+                    String[] components = lineString.split(" ");
+                    boolean actualResult = String[1].equals("t");
+
                     // get result from predictor
-                    // accessess++
-                    // if (result != actualResult) mispredictions++;
-                // print results
-                    // bufferedprint(this.print())
-                    // bufferedprint(predictor.print())
+                    boolean predictedResult = SP.call();
+                    SP.update(actualResult);
+
+                    accesses++;
+                    if (predictedResult != actualResult)
+                        mispredictions++;
+                }
+
+                BufferedWriter myWriter = new BufferedWriter(new OutputStreamWriter(System.out));
+                myWriter.write("COMMAND\n");
+                myWriter.write("./sim smith " + B + " " + tracefileString + "\n");
+                myWriter.write("OUTPUT\n");
+                myWriter.write("number of predictions:\t" + accesses + "\n");
+                myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
+                myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) mispredictions / accesses) + "%\n");
+                myWriter.write("FINAL COUNTER CONTENT:\t");
+                myWriter.write(SP.print());
+                
                 break;
 
             case "bimodal":
