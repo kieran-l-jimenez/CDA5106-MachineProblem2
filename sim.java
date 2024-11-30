@@ -5,12 +5,12 @@ import java.io.OutputStreamWriter;
 
 class sim {
     public static void main(String[] args) {
-        String tracefileString, lineString;
-        BufferedReader fileReader;
-        int accesses, mispredictions;
-        BufferedWriter myWriter = new BufferedWriter(new OutputStreamWriter(System.out));
-
         try {
+            BufferedReader fileReader;
+            BufferedWriter myWriter = new BufferedWriter(new OutputStreamWriter(System.out));
+            String tracefileString, lineString;
+            int accesses, mispredictions;
+
             switch (args[0]) {
                 case "smith":
                     // initialize values
@@ -48,10 +48,10 @@ class sim {
                     myWriter.write("OUTPUT\n");
                     myWriter.write("number of predictions:\t" + accesses + "\n");
                     myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
-                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) mispredictions / accesses) + "%\n");
+                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) (100.0 * mispredictions) / accesses) + "%\n");
                     myWriter.write("FINAL COUNTER CONTENT:\t");
                     myWriter.write(SP.print());
-
+                    myWriter.close();
                     break;
 
                 case "bimodal":
@@ -61,7 +61,7 @@ class sim {
                     fileReader = new BufferedReader(new FileReader(tracefileString));
                     accesses = 0;
                     mispredictions = 0;
-                    bimodalPredictor BP = new bimodalPredictor(M2);
+                    bimodalPredictor BP = new bimodalPredictor(1 << M2);
                     // initialize accesses and mispredictions
                     while ((lineString = fileReader.readLine()) != null) {
                         // split line
@@ -83,9 +83,10 @@ class sim {
                     myWriter.write("OUTPUT\n");
                     myWriter.write("number of predictions:\t" + accesses + "\n");
                     myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
-                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) mispredictions / accesses) + "%\n");
+                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) (100.0 * mispredictions) / accesses) + "%\n");
                     myWriter.write("FINAL BIMODAL CONTENTS");
                     myWriter.write(BP.print());
+                    myWriter.close();
                     break;
 
                 case "gshare":
@@ -96,7 +97,7 @@ class sim {
                     fileReader = new BufferedReader(new FileReader(tracefileString));
                     accesses = 0;
                     mispredictions = 0;
-                    gsharePredictor GP = new gsharePredictor(M1, N);
+                    gsharePredictor GP = new gsharePredictor(1 << M1, N);
                     // initialize accesses and mispredictions
                     while ((lineString = fileReader.readLine()) != null) {
                         // split line
@@ -119,9 +120,10 @@ class sim {
                     myWriter.write("OUTPUT\n");
                     myWriter.write("number of predictions:\t" + accesses + "\n");
                     myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
-                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) mispredictions / accesses) + "%\n");
+                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) (100.0 * mispredictions) / accesses) + "%\n");
                     myWriter.write("FINAL GSHARE CONTENTS");
                     myWriter.write(GP.print());
+                    myWriter.close();
                     break;
 
                 case "hybrid":
@@ -156,9 +158,10 @@ class sim {
                     myWriter.write("OUTPUT\n");
                     myWriter.write("number of predictions:\t" + accesses + "\n");
                     myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
-                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) mispredictions / accesses) + "%\n");
+                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) (100.0 * mispredictions) / accesses) + "%\n");
                     myWriter.write("FINAL CHOOSER CONTENTS");
                     myWriter.write(HP.print());
+                    myWriter.close();
                     break;
             }
         } catch (Exception e) {
@@ -251,8 +254,8 @@ class gsharePredictor {
         GBHR = 0;
         predictionTable = new basicPredictor[m];
         //TODO parallelize this loop if takes more than 2 minutes
-        for (basicPredictor BPi : predictionTable) {
-            BPi = new basicPredictor();
+        for (int i = 0; i < predictionTable.length; i++) {
+            predictionTable[i] = new basicPredictor();
         }
     }
 
@@ -312,8 +315,8 @@ class hybridPredictor {
         chooser = new basicPredictor[k];
         int chooserBits = 1 << 2;
         //TODO parallelize this loop if takes more than 2 minutes
-        for (basicPredictor BPi : chooser) {
-            BPi = new basicPredictor(chooserBits);
+        for (int i = 0; i < chooser.length; i++) {
+            chooser[i] = new basicPredictor(chooserBits);
         }
     }
 
