@@ -48,7 +48,7 @@ class sim {
                     myWriter.write("OUTPUT\n");
                     myWriter.write("number of predictions:\t" + accesses + "\n");
                     myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
-                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) (100.0 * mispredictions) / accesses) + "%\n");
+                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (double) (100.0 * mispredictions) / accesses) + "%\n");
                     myWriter.write("FINAL COUNTER CONTENT:\t");
                     myWriter.write(SP.print());
                     myWriter.close();
@@ -83,7 +83,7 @@ class sim {
                     myWriter.write("OUTPUT\n");
                     myWriter.write("number of predictions:\t" + accesses + "\n");
                     myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
-                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) (100.0 * mispredictions) / accesses) + "%\n");
+                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (double) (100.0 * mispredictions) / accesses) + "%\n");
                     myWriter.write("FINAL BIMODAL CONTENTS");
                     myWriter.write(BP.print());
                     myWriter.close();
@@ -120,7 +120,7 @@ class sim {
                     myWriter.write("OUTPUT\n");
                     myWriter.write("number of predictions:\t" + accesses + "\n");
                     myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
-                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) (100.0 * mispredictions) / accesses) + "%\n");
+                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (double) (100.0 * mispredictions) / accesses) + "%\n");
                     myWriter.write("FINAL GSHARE CONTENTS");
                     myWriter.write(GP.print());
                     myWriter.close();
@@ -158,7 +158,7 @@ class sim {
                     myWriter.write("OUTPUT\n");
                     myWriter.write("number of predictions:\t" + accesses + "\n");
                     myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
-                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) (100.0 * mispredictions) / accesses) + "%\n");
+                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (double) (100.0 * mispredictions) / accesses) + "%\n");
                     myWriter.write("FINAL CHOOSER CONTENTS");
                     myWriter.write(HP.print());
                     myWriter.close();
