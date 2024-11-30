@@ -78,6 +78,7 @@ class sim {
                         if (predictedResult != actualResult)
                             mispredictions++;
                     }
+
                     myWriter.write("COMMAND\n");
                     myWriter.write("./sim bimodal " + M2 + " " + tracefileString + "\n");
                     myWriter.write("OUTPUT\n");
@@ -115,6 +116,7 @@ class sim {
                         if (predictedResult != actualResult)
                             mispredictions++;
                     }
+
                     myWriter.write("COMMAND\n");
                     myWriter.write("./sim gshare " + M1 + " " + N + " " + tracefileString + "\n");
                     myWriter.write("OUTPUT\n");
@@ -137,7 +139,7 @@ class sim {
                     fileReader = new BufferedReader(new FileReader(tracefileString));
                     accesses = 0;
                     mispredictions = 0;
-                    hybridPredictor HP = new hybridPredictor(K, hM1, hN, hM2);
+                    hybridPredictor HP = new hybridPredictor(1 << K, hM1, hN, hM2);
                     // initialize accesses and mispredictions
                     while ((lineString = fileReader.readLine()) != null) {
                         // split line
@@ -153,6 +155,7 @@ class sim {
                         if (predictedResult != actualResult)
                             mispredictions++;
                     }
+
                     myWriter.write("COMMAND\n");
                     myWriter.write("./sim hybrid " + K + " " + hM1 + " " + hN + " " + hM2 + " " + tracefileString + "\n");
                     myWriter.write("OUTPUT\n");
@@ -260,7 +263,7 @@ class gsharePredictor {
     }
 
     public boolean call(int PC) {
-        //1. PC >> 2    : discard 2 bottom bits of PC
+        //1. PC >>> 2    : discard 2 bottom bits of PC
         //2. & mMask    : get m low-order bits (aka, bits m+1 through 2)
         //3. ^ GBHR     : XOR with global branch history; in bimodal there will be no change (XOR 0 does nothing)
         index = ((PC >>> 2) & mMask) ^ GBHR;
@@ -285,7 +288,7 @@ class gsharePredictor {
 
         // if the branch was taken, place 1 in most significant bit
         if (actualResult) {
-            GBHR = (1 << nBits) | GBHR;
+            GBHR = (1 << (nBits-1)) | GBHR;
         }
     }
 
@@ -309,8 +312,8 @@ class hybridPredictor {
 
     public hybridPredictor(int k, int m1, int n, int m2) {
         // k = 1 << kBits = 2^kBits
-        gsPredictor = new gsharePredictor(m1, n);
-        bmPredictor = new bimodalPredictor(m2);
+        gsPredictor = new gsharePredictor(1 << m1, n);
+        bmPredictor = new bimodalPredictor(1 << m2);
         kMask = k - 1;
         chooser = new basicPredictor[k];
         int chooserBits = 1 << 2;
@@ -356,9 +359,9 @@ class hybridPredictor {
             retString = retString.concat("\n" + i + "\t" + chooser[i].current);
         }
 
-        retString = retString.concat("FINAL GSHARE CONTENTS");
+        retString = retString.concat("\nFINAL GSHARE CONTENTS");
         retString = retString.concat(gsPredictor.print());
-        retString = retString.concat("FINAL BIMODAL CONTENTS");
+        retString = retString.concat("\nFINAL BIMODAL CONTENTS");
         retString = retString.concat(bmPredictor.print());
 
         return retString;
