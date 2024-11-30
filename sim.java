@@ -5,101 +5,165 @@ import java.io.OutputStreamWriter;
 
 class sim {
     public static void main(String[] args) {
-        switch (args[0]) {
-            case "smith":
-                // initialize values
-                int B = args[1];
-                String tracefileString = args[2];
+        String tracefileString, lineString;
+        BufferedReader fileReader;
+        int accesses, mispredictions;
+        BufferedWriter myWriter = new BufferedWriter(new OutputStreamWriter(System.out));
 
-                // validate inputs
-                //if (B <= 0 || tracefileString == null);
+        try {
+            switch (args[0]) {
+                case "smith":
+                    // initialize values
+                    int B = Integer.parseInt(args[1]);
+                    tracefileString = args[2];
 
-                // open file
-                BufferedReader fileReader = new BufferedReader(new FileReader(tracefileString));
+                    // validate inputs
+                    //if (B <= 0 || tracefileString == null);
 
-                // initialize accesses and mispredictions
-                int accesses = 0;
-                int mispredictions = 0;
-                String lineString;
-                smithPredictor SP = new smithPredictor(1 << B);
+                    // open file
+                    fileReader = new BufferedReader(new FileReader(tracefileString));
 
-                // iterate through trace
-                while ((lineString = fileReader.readLine()) != null) {
-                    // split line
-                    String[] components = lineString.split(" ");
-                    boolean actualResult = String[1].equals("t");
+                    // initialize accesses and mispredictions
+                    accesses = 0;
+                    mispredictions = 0;
+                    smithPredictor SP = new smithPredictor(1 << B);
 
-                    // get result from predictor
-                    boolean predictedResult = SP.call();
-                    SP.update(actualResult);
+                    // iterate through trace
+                    while ((lineString = fileReader.readLine()) != null) {
+                        // split line
+                        String[] components = lineString.split(" ");
+                        boolean actualResult = components[1].equals("t");
 
-                    accesses++;
-                    if (predictedResult != actualResult)
-                        mispredictions++;
-                }
+                        // get result from predictor
+                        boolean predictedResult = SP.call();
+                        SP.update(actualResult);
 
-                BufferedWriter myWriter = new BufferedWriter(new OutputStreamWriter(System.out));
-                myWriter.write("COMMAND\n");
-                myWriter.write("./sim smith " + B + " " + tracefileString + "\n");
-                myWriter.write("OUTPUT\n");
-                myWriter.write("number of predictions:\t" + accesses + "\n");
-                myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
-                myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) mispredictions / accesses) + "%\n");
-                myWriter.write("FINAL COUNTER CONTENT:\t");
-                myWriter.write(SP.print());
+                        accesses++;
+                        if (predictedResult != actualResult)
+                            mispredictions++;
+                    }
 
-                break;
+                    myWriter.write("COMMAND\n");
+                    myWriter.write("./sim smith " + B + " " + tracefileString + "\n");
+                    myWriter.write("OUTPUT\n");
+                    myWriter.write("number of predictions:\t" + accesses + "\n");
+                    myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
+                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) mispredictions / accesses) + "%\n");
+                    myWriter.write("FINAL COUNTER CONTENT:\t");
+                    myWriter.write(SP.print());
 
-            case "bimodal":
-                // initialize values
-                // initialize accesses and mispredictions
-                // iterate through trace
-                    // split line
-                    // pass components[0] after converting from hex
-                    // get result from predictor
-                    // accessess++
-                    // if (result != actualResult) mispredictions++;
-                // print results
-                    // bufferedprint(this.print())
-                    // bufferedprint(predictor.print())
-                break;
+                    break;
 
-            case "gshare":
-                // initialize values
-                // initialize accesses and mispredictions
-                // iterate through trace
-                    // split line
-                    // get result from predictor
-                    // accessess++
-                    // if (result != actualResult) mispredictions++;
-                // print results
-                    // bufferedprint(this.print())
-                    // bufferedprint(predictor.print())
-                break;
+                case "bimodal":
+                    // initialize values
+                    int M2 = Integer.parseInt(args[1]);
+                    tracefileString = args[2];
+                    fileReader = new BufferedReader(new FileReader(tracefileString));
+                    accesses = 0;
+                    mispredictions = 0;
+                    bimodalPredictor BP = new bimodalPredictor(M2);
+                    // initialize accesses and mispredictions
+                    while ((lineString = fileReader.readLine()) != null) {
+                        // split line
+                        String[] components = lineString.split(" ");
+                        boolean actualResult = components[1].equals("t");
+                        // convert hex to decimal
+                        int PC = Integer.parseInt(components[0],16);
 
-            case "hybrid":
-                // initialize values
-                // initialize accesses and mispredictions
-                // iterate through trace
-                    // split line
-                    // get result from predictor
-                    // accessess++
-                    // if (result != actualResult) mispredictions++;
-                // print results
-                    // bufferedprint(this.print())
-                    // bufferedprint(predictor.print())
-                break;
+                        // get result from predictor
+                        boolean predictedResult = BP.call(PC);
+                        BP.updateBP(actualResult);
+
+                        accesses++;
+                        if (predictedResult != actualResult)
+                            mispredictions++;
+                    }
+                    myWriter.write("COMMAND\n");
+                    myWriter.write("./sim bimodal " + M2 + " " + tracefileString + "\n");
+                    myWriter.write("OUTPUT\n");
+                    myWriter.write("number of predictions:\t" + accesses + "\n");
+                    myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
+                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) mispredictions / accesses) + "%\n");
+                    myWriter.write("FINAL BIMODAL CONTENTS");
+                    myWriter.write(BP.print());
+                    break;
+
+                case "gshare":
+                    // initialize values
+                    int M1 = Integer.parseInt(args[1]);
+                    int N = Integer.parseInt(args[2]);
+                    tracefileString = args[3];
+                    fileReader = new BufferedReader(new FileReader(tracefileString));
+                    accesses = 0;
+                    mispredictions = 0;
+                    gsharePredictor GP = new gsharePredictor(M1, N);
+                    // initialize accesses and mispredictions
+                    while ((lineString = fileReader.readLine()) != null) {
+                        // split line
+                        String[] components = lineString.split(" ");
+                        boolean actualResult = components[1].equals("t");
+                        // convert hex to decimal
+                        int PC = Integer.parseInt(components[0],16);
+
+                        // get result from predictor
+                        boolean predictedResult = GP.call(PC);
+                        GP.updateBP(actualResult);
+                        GP.updateGBHR(actualResult);
+
+                        accesses++;
+                        if (predictedResult != actualResult)
+                            mispredictions++;
+                    }
+                    myWriter.write("COMMAND\n");
+                    myWriter.write("./sim gshare " + M1 + " " + N + " " + tracefileString + "\n");
+                    myWriter.write("OUTPUT\n");
+                    myWriter.write("number of predictions:\t" + accesses + "\n");
+                    myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
+                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) mispredictions / accesses) + "%\n");
+                    myWriter.write("FINAL GSHARE CONTENTS");
+                    myWriter.write(GP.print());
+                    break;
+
+                case "hybrid":
+                    // initialize values
+                    int K = Integer.parseInt(args[1]);
+                    int hM1 = Integer.parseInt(args[2]);
+                    int hN = Integer.parseInt(args[3]);
+                    int hM2 = Integer.parseInt(args[4]);
+                    tracefileString = args[5];
+
+                    fileReader = new BufferedReader(new FileReader(tracefileString));
+                    accesses = 0;
+                    mispredictions = 0;
+                    hybridPredictor HP = new hybridPredictor(K, hM1, hN, hM2);
+                    // initialize accesses and mispredictions
+                    while ((lineString = fileReader.readLine()) != null) {
+                        // split line
+                        String[] components = lineString.split(" ");
+                        boolean actualResult = components[1].equals("t");
+                        // convert hex to decimal
+                        int PC = Integer.parseInt(components[0],16);
+
+                        // get result from predictor
+                        boolean predictedResult = HP.predict(PC, actualResult);
+
+                        accesses++;
+                        if (predictedResult != actualResult)
+                            mispredictions++;
+                    }
+                    myWriter.write("COMMAND\n");
+                    myWriter.write("./sim hybrid " + K + " " + hM1 + " " + hN + " " + hM2 + " " + tracefileString + "\n");
+                    myWriter.write("OUTPUT\n");
+                    myWriter.write("number of predictions:\t" + accesses + "\n");
+                    myWriter.write("number of mispredictions:\t" + mispredictions + "\n");
+                    myWriter.write("misprediction rate:\t" + String.format("%.2f", (float) mispredictions / accesses) + "%\n");
+                    myWriter.write("FINAL CHOOSER CONTENTS");
+                    myWriter.write(HP.print());
+                    break;
+            }
+        } catch (Exception e) {
+            System.out.println(e);
         }
-    }
-
-    public String print() {
-        // COMMAND
-        // "./sim " + args
-        // OUTPUT
-        // "number of predictions:\t" + accessess
-        // "number of mispredictions:\t" + mispredictions
-        // "misprediction rate:\t" + .2f(mispredictions/accessess) + "%\n"
-        // Maybe return a buffered string thing?
     }
 }
 
@@ -107,7 +171,7 @@ class basicPredictor {
     public int max, min, current, flip;
 
     public basicPredictor() {
-        basicPredictor((1 << 3));
+        this((1 << 3));
     }
 
     public basicPredictor(int x) {
@@ -158,8 +222,8 @@ class smithPredictor {
 class bimodalPredictor {
     gsharePredictor GP;
 
-    public bimodalPredictor(int m, String tracefileString) {
-        GP = new gsharePredictor(m, 0, tracefileString);
+    public bimodalPredictor(int m) {
+        GP = new gsharePredictor(m, 0);
     }
 
     public boolean call(int PC) {
@@ -179,7 +243,7 @@ class gsharePredictor {
     basicPredictor[] predictionTable;
     int index, mMask, nBits, GBHR;
 
-    public gsharePredictor(int m, int n, String tracefileString) {
+    public gsharePredictor(int m, int n) {
         //m = 1 << mBits = 2^mBits
         index = 0;
         mMask = m - 1;
@@ -225,7 +289,7 @@ class gsharePredictor {
     public String print() {
         //TODO convert to use StringBuffer if takes more than 2 minutes
         String retString = new String();
-        
+
         //TODO parallelize this loop if takes more than 2 minutes
         for (int i = 0; i < predictionTable.length; i++) {
             retString = retString.concat("\n" + i + "\t" + predictionTable[i].current);
@@ -240,10 +304,10 @@ class hybridPredictor {
     gsharePredictor gsPredictor;
     int kMask;
 
-    public hybridPredictor() {
+    public hybridPredictor(int k, int m1, int n, int m2) {
         // k = 1 << kBits = 2^kBits
-        gsPredictor = new gsharePredictor(m1, n, tracefileString);
-        bmPredictor = new bimodalPredictor(m2, tracefileString);
+        gsPredictor = new gsharePredictor(m1, n);
+        bmPredictor = new bimodalPredictor(m2);
         kMask = k - 1;
         chooser = new basicPredictor[k];
         int chooserBits = 1 << 2;
@@ -259,7 +323,7 @@ class hybridPredictor {
         boolean retB = bmPredictor.call(PC);
         boolean ret;
 
-        if (chooser[chooserIndex].call()) {
+        if (chooser[chooserIndex].predict()) {
             ret = retG;
             gsPredictor.updateBP(actualResult);
         } else {
@@ -270,7 +334,7 @@ class hybridPredictor {
         gsPredictor.updateGBHR(actualResult);
 
         if (retB == retG) {
-            break;
+            //break;
         } else if (retG == actualResult) {
             chooser[chooserIndex].update(true);
         } else {
